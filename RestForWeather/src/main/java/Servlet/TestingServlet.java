@@ -1,14 +1,18 @@
 package Servlet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dao.CityDAO;
+import dao.PersonDAO;
 import dao.WeatherDAO;
 import dto.CurrentWeatherResponseDTO;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import models.City;
+import models.Person;
 import models.Weather;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -18,6 +22,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
+
 
 public class TestingServlet extends HttpServlet {
     private static final OkHttpClient client = new OkHttpClient();
@@ -28,14 +34,25 @@ public class TestingServlet extends HttpServlet {
 
     }
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("text/html");
         PrintWriter out = response.getWriter();
+        out.println("<html><body>");
         String uri = request.getRequestURI();
         System.out.println();
 
-        if(uri.equals("/weather"))
-            request.getRequestDispatcher("WEB-INF/city.html").include(request, response);
+        if(uri.equals("/weather")){
+            HttpSession session = request.getSession();
+            int id = (int) session.getAttribute("id");
+            try {
+                Person person = PersonDAO.getUserByID(id);
+                out.print("<H4> Hello, " + person.getName() + " Welcome to Profile!</H4>");
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            request.getRequestDispatcher("city.html").include(request, response);
+        }
 
-        else if(uri.equals("/weather/analysis")){
+        if(uri.equals("/weather/analysis")){
             String url = "";
             try {
                 List<String> list = CityDAO.listOfCity();
@@ -67,7 +84,7 @@ public class TestingServlet extends HttpServlet {
                 Weather weather = WeatherDAO.getWeatherWithMaxTemperature();
                 out.println("<html>\n<body>");
                 out.println("<b> The warmest city is " + CityDAO.cityByID(weather.getCity_id()).getName() + ": </b> " +
-                          weather.getMain() + ", " + weather.getDescription() + ". ");
+                        weather.getMain() + ", " + weather.getDescription() + ". ");
                 out.println(" Temperature: " + weather.getTemperature() + "', feels like: " +  weather.getFeels_like() + "' ");
                 weathers.remove(weather);
                 Weather weather1 = WeatherDAO.getWeatherWithMinTemperature();
@@ -83,7 +100,7 @@ public class TestingServlet extends HttpServlet {
                         out.println(" Temperature: " + weathers.get(i).getTemperature() + "', feels like: " + weathers.get(i).getFeels_like() + "'</p> ");
                     }
                 }
-                out.println("<a href=" + "/" + ">Home page!</a>" + " " + "</body>\n</html>");
+                out.println("<a href=" + "/weather" + ">Home page!</a>" + " " + "</body>\n</html>");
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -128,11 +145,12 @@ public class TestingServlet extends HttpServlet {
                         ", " + currentWeatherResponseDTO.getWeather().get(0).getDescription() + ". ");
                 out.println(" Temperature: " + weather.getTemperature() +
                 "', feels like: " +  weather.getFeels_like() + "'</p> ");
-                out.println("<a href=" + "/" + ">Home page!</a>" + " " + "</body>\n</html>");
+                out.println("<a href=" + "/weather" + ">Home page!</a>" + " " + "</body>\n</html>");
             } else {
                 System.out.println("Request failed: " + response1.code());
             }
         }
+        
     }
     private String getUrl(String cityFromRequest) {
         // URL с параметрами
