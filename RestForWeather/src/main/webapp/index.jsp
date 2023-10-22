@@ -2,9 +2,6 @@
 <%@ page import="java.util.Date" %>
 <html>
 <body>
-<H4>Welcome!</H4>
-<p>If you wanna to check weather: - <a href="/weather">Check!</a></p>
-
 <%!
     String getFormatted()
     {
@@ -12,6 +9,12 @@
         return sdf.format(new Date());
     }
 %>
-<i>Today <%= getFormatted() %></i>
+<H4>Welcome!     <i>Today <%= getFormatted() %></i> </H4>
+<a href="SignUp.html">Sign up</a> |
+<a href="login.html">Login </a> |
+<a href="/checkLogin">Profile</a> |
+<%--<a href="/LogoutServlet">Logout </a> |--%>
+<%--<p>If you wanna to check weather: - <a href="/weather">Check!</a></p>--%>
+
 </body>
 </html>
